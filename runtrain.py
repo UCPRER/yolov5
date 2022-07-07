@@ -1,5 +1,4 @@
 import argparse
-import logging
 from pathlib import Path
 from converter import coco2yolo
 import yaml
@@ -62,7 +61,7 @@ def main():
         generate_coco_yaml(root, args.train_list, args.val_list, str(root/"labels/train"), str(root/"labels/val"))
 
         coco = True if args.label_type == "coco" else False
-        train.run(data=root/"coco.yaml", imgsz=640, batch_size=96, epochs=300, cfg='yolov5s.yaml', is_coco=coco)
+        train.run(data=root/"coco.yaml", imgsz=640, batch_size=96, epochs=300, cfg='yolov5s.yaml', is_coco=coco, project=root, name="result")
 
 
 if __name__ == "__main__":

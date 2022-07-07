@@ -38,7 +38,7 @@ def coco2yolo(json_path='./instances_val2017.json', save_path='./labels'):
         imgid = ann['image_id']
         anns.setdefault(imgid, []).append(ann)
 
-    print('got anns')
+    print('convert coco annotations to yolo')
 
     for img in tqdm(data['images']):
         filename = img["file_name"]

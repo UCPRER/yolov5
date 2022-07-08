@@ -1,6 +1,7 @@
 import os
 import json
 from tqdm import tqdm
+from utils.general import LOGGER
 
 
 def coco2yolo(json_path='./instances_val2017.json', save_path='./labels'):
@@ -31,14 +32,13 @@ def coco2yolo(json_path='./instances_val2017.json', save_path='./labels'):
         for i, category in enumerate(data['categories']):
             f.write(f"{category['name']}\n")
             id_map[category['id']] = i
-    # print(id_map)
 
     anns = {}
     for ann in data['annotations']:
         imgid = ann['image_id']
         anns.setdefault(imgid, []).append(ann)
 
-    print('convert coco annotations to yolo')
+    LOGGER.info('convert coco annotations to yolo')
 
     for img in tqdm(data['images']):
         filename = img["file_name"]

@@ -29,11 +29,7 @@ import torch.nn as nn
 import yaml
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import SGD, Adam, AdamW, lr_scheduler
-if os.getenv('development'):
-    import tqdm
-else:
-    from tqdm import tqdm_notebook as tqdm
-
+from tqdm import tqdm
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:

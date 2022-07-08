@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import yaml
 import sys
+import json
 
 
 def get_args():
@@ -13,7 +14,7 @@ def get_args():
     parser.add_argument('--val-list', default='', help='path of validation set list')
     parser.add_argument('--train-annotation', default='', help='path of training set annotation')
     parser.add_argument('--val-annotation', default='', help='path of validation set annotation')
-    parser.add_argument('--config', default='', help='path of training config(Hyperparameters)')
+    parser.add_argument('--config', default='', help='path of training config(Hyperparameters, JSON file)')
     parser.add_argument('--device', default='', help='cpu or cuda device, i.e. 0 or 0,1,2,3 or cpu')
 
     args = parser.parse_args()
@@ -66,9 +67,14 @@ def main():
 
         generate_coco_yaml(root, args.train_list, args.val_list, root / "labels/train", root / "labels/val")
 
+        # 导入超参数
+        hyp = dict()
+        if args.config:
+            with open(args.config) as f:
+                hyp = json.load(f)
+
         coco = True if args.label_type == "coco" else False
-        train.run(data=root / "coco.yaml", imgsz=640, batch_size=96, epochs=300, cfg='yolov5s.yaml', is_coco=coco, project=root,
-                  name="result", device=args.device)
+        train.run(data=root / "coco.yaml", cfg='yolov5s.yaml', is_coco=coco, project=root, name="result", device=args.device, **hyp)
 
 
 if __name__ == "__main__":

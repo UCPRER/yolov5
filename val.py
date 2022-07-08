@@ -26,10 +26,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-if os.getenv('development'):
-    import tqdm
-else:
-    from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory

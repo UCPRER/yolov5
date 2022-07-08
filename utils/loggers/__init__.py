@@ -18,18 +18,21 @@ from utils.torch_utils import de_parallel
 LOGGERS = ('csv', 'tb', 'wandb')  # text-file, TensorBoard, Weights & Biases
 RANK = int(os.getenv('RANK', -1))
 
-try:
-    import wandb
+if os.getenv('development'):
+    try:
+        import wandb
 
-    assert hasattr(wandb, '__version__')  # verify package import not local dir
-    if pkg.parse_version(wandb.__version__) >= pkg.parse_version('0.12.2') and RANK in {0, -1}:
-        try:
-            wandb_login_success = wandb.login(timeout=30)
-        except wandb.errors.UsageError:  # known non-TTY terminal issue
-            wandb_login_success = False
-        if not wandb_login_success:
-            wandb = None
-except (ImportError, AssertionError):
+        assert hasattr(wandb, '__version__')  # verify package import not local dir
+        if pkg.parse_version(wandb.__version__) >= pkg.parse_version('0.12.2') and RANK in {0, -1}:
+            try:
+                wandb_login_success = wandb.login(timeout=30)
+            except wandb.errors.UsageError:  # known non-TTY terminal issue
+                wandb_login_success = False
+            if not wandb_login_success:
+                wandb = None
+    except (ImportError, AssertionError):
+        wandb = None
+else:
     wandb = None
 
 

@@ -1,6 +1,9 @@
 import os
 import json
-from tqdm import tqdm
+if os.getenv('development'):
+    import tqdm
+else:
+    from tqdm import tqdm_notebook as tqdm
 from utils.general import LOGGER
 
 

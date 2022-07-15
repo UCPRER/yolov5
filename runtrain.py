@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 import sys
 import json
+from pycocotools.coco import COCO
 
 
 def get_args():
@@ -21,24 +22,17 @@ def get_args():
     return args
 
 
-def generate_coco_yaml(root, train_list, val_list, train_label, val_label):
+def generate_coco_yaml(root, train_list, val_list, train_label, val_label, json_path):
+    coco = COCO(json_path)
+    catids = coco.getCatIds()
+    cats = coco.loadCats(catids)
     obj = {
         "train": str(train_list),
         "val": str(val_list),
         "train_label": str(train_label),
         "val_label": str(val_label),
-        "nc": 80,
-        "names": [
-            'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-            'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-            'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-            'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-            'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-            'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-            'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
-            'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
-            'hair drier', 'toothbrush'
-        ],
+        "nc": len(catids),
+        "names": [cat['name'] for cat in cats],
     }
     with open(root / "coco.yaml", "w") as f:
         yaml.safe_dump(data=obj, stream=f)
@@ -65,7 +59,7 @@ def main():
         coco2yolo(json_path=args.train_annotation, save_path=root / "labels/train")
         coco2yolo(json_path=args.val_annotation, save_path=root / "labels/val")
 
-        generate_coco_yaml(root, args.train_list, args.val_list, root / "labels/train", root / "labels/val")
+        generate_coco_yaml(root, args.train_list, args.val_list, root / "labels/train", root / "labels/val", args.val_annotation)
 
         # 导入超参数
         hyp = dict()

@@ -107,7 +107,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     nc = 1 if single_cls else int(data_dict['nc'])  # number of classes
     names = ['item'] if single_cls and len(data_dict['names']) != 1 else data_dict['names']  # class names
     assert len(names) == nc, f'{len(names)} names found for nc={nc} dataset in {data}'  # check
-    is_coco = opt.is_coco  # FIXME: COCO dataset
+    is_coco = opt.is_coco
 
     # Model
     check_suffix(weights, '.pt')  # check weights

@@ -276,13 +276,14 @@ def file_size(path):
 
 
 def check_online():
+    return False  # offline environment
     # Check internet connectivity
-    import socket
-    try:
-        socket.create_connection(("1.1.1.1", 443), 5)  # check host accessibility
-        return True
-    except OSError:
-        return False
+    # import socket
+    # try:
+    #     socket.create_connection(("1.1.1.1", 443), 5)  # check host accessibility
+    #     return True
+    # except OSError:
+    #     return False
 
 
 def git_describe(path=ROOT):  # path must be a directory
@@ -418,16 +419,16 @@ def check_file(file, suffix=''):
     file = str(file)  # convert to str()
     if Path(file).is_file() or not file:  # exists
         return file
-    elif file.startswith(('http:/', 'https:/')):  # download
-        url = file  # warning: Pathlib turns :// -> :/
-        file = Path(urllib.parse.unquote(file).split('?')[0]).name  # '%2F' to '/', split https://url.com/file.txt?auth
-        if Path(file).is_file():
-            LOGGER.info(f'Found {url} locally at {file}')  # file already exists
-        else:
-            LOGGER.info(f'Downloading {url} to {file}...')
-            torch.hub.download_url_to_file(url, file)
-            assert Path(file).exists() and Path(file).stat().st_size > 0, f'File download failed: {url}'  # check
-        return file
+    # elif file.startswith(('http:/', 'https:/')):  # download is prohibit
+    #     url = file  # warning: Pathlib turns :// -> :/
+    #     file = Path(urllib.parse.unquote(file).split('?')[0]).name  # '%2F' to '/', split https://url.com/file.txt?auth
+    #     if Path(file).is_file():
+    #         LOGGER.info(f'Found {url} locally at {file}')  # file already exists
+    #     else:
+    #         LOGGER.info(f'Downloading {url} to {file}...')
+    #         torch.hub.download_url_to_file(url, file)
+    #         assert Path(file).exists() and Path(file).stat().st_size > 0, f'File download failed: {url}'  # check
+    #     return file
     else:  # search
         files = []
         for d in 'data', 'models', 'utils':  # search directories
@@ -503,7 +504,7 @@ def check_dataset(data, autodownload=True):
     #         dt = f'({round(time.time() - t, 1)}s)'
     #         s = f"success ✅ {dt}, saved to {colorstr('bold', root)}" if r in (0, None) else f"failure {dt} ❌"
     #         LOGGER.info(emojis(f"Dataset download {s}"))
-    check_font('Arial.ttf' if is_ascii(data['names']) else 'Arial.Unicode.ttf', progress=True)  # download fonts
+    # check_font('Arial.ttf' if is_ascii(data['names']) else 'Arial.Unicode.ttf', progress=True)  # download fonts
     return data  # dictionary
 
 
@@ -519,7 +520,7 @@ def check_amp(model):
         b = m(im).xywhn[0]  # AMP inference
         return a.shape == b.shape and torch.allclose(a, b, atol=0.1)  # close to 10% absolute tolerance
 
-    prefix = colorstr('AMP: ')
+    prefix = 'AMP: '
     device = next(model.parameters()).device  # get model device
     if device.type == 'cpu':
         return False  # AMP disabled on CPU

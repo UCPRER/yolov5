@@ -27,7 +27,7 @@ from torch.utils.data import DataLoader, Dataset, dataloader, distributed
 from tqdm import tqdm
 
 from utils.augmentations import Albumentations, augment_hsv, copy_paste, letterbox, mixup, random_perspective
-from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, check_dataset, check_requirements, check_yaml, clean_str,
+from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, check_dataset, check_requirements, check_yaml, clean_str, colorstr,
                            cv2, is_colab, is_kaggle, segments2boxes, xyn2xy, xywh2xyxy, xywhn2xyxy, xyxy2xywhn)
 from utils.torch_utils import torch_distributed_zero_first
 
@@ -95,6 +95,7 @@ def create_dataloader(path,
                       imgsz,
                       batch_size,
                       stride,
+                      work_dir,
                       single_cls=False,
                       hyp=None,
                       augment=False,
@@ -114,6 +115,7 @@ def create_dataloader(path,
     with torch_distributed_zero_first(rank):  # init dataset *.cache only once if DDP
         dataset = LoadImagesAndLabels(
             path,
+            work_dir,
             imgsz,
             batch_size,
             augment=augment,  # augmentation
@@ -407,6 +409,7 @@ class LoadImagesAndLabels(Dataset):
 
     def __init__(self,
                  path,
+                 work_dir,
                  img_size=640,
                  batch_size=16,
                  augment=False,
@@ -454,7 +457,8 @@ class LoadImagesAndLabels(Dataset):
 
         # Check cache
         self.label_files = img2label_paths(self.im_files, label_path)  # FIXME: labels
-        cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix('.cache')
+        # cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix('.cache')
+        cache_path = Path(work_dir) / Path(p).with_suffix('.cache').name
         try:
             cache, exists = np.load(cache_path, allow_pickle=True).item(), True  # load dict
             assert cache['version'] == self.cache_version  # same version
@@ -966,7 +970,7 @@ def verify_image_label(args):
                     lb = lb[i]  # remove duplicates
                     if segments:
                         segments = segments[i]
-                    msg = f'{prefix}WARNING: {im_file}: {nl - len(i)} duplicate labels removed'
+                    msg = f'{prefix}WARNING: {Path(im_file).name}: {nl - len(i)} duplicate labels removed'
             else:
                 ne = 1  # label empty
                 lb = np.zeros((0, 5), dtype=np.float32)

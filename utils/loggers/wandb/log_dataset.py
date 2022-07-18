@@ -2,7 +2,9 @@ import argparse
 
 from wandb_utils import WandbLogger
 
-from utils.general import LOGGER
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 WANDB_ARTIFACT_PREFIX = 'wandb-artifact://'
 

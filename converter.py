@@ -1,7 +1,8 @@
 import os
 import json
 from tqdm import tqdm
-from utils.general import LOGGER
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def coco2yolo(json_path='./instances_val2017.json', save_path='./labels'):

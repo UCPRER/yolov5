@@ -27,9 +27,12 @@ from torch.utils.data import DataLoader, Dataset, dataloader, distributed
 from tqdm import tqdm
 
 from utils.augmentations import Albumentations, augment_hsv, copy_paste, letterbox, mixup, random_perspective
-from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, check_dataset, check_requirements, check_yaml, clean_str, colorstr,
+from utils.general import (DATASETS_DIR, NUM_THREADS, check_dataset, check_requirements, check_yaml, clean_str, colorstr,
                            cv2, is_colab, is_kaggle, segments2boxes, xyn2xy, xywh2xyxy, xywhn2xyxy, xyxy2xywhn)
 from utils.torch_utils import torch_distributed_zero_first
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 # Parameters
 HELP_URL = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'

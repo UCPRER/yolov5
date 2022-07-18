@@ -16,7 +16,10 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 
 from utils.dataloaders import LoadImagesAndLabels, img2label_paths
-from utils.general import LOGGER, check_dataset, check_file
+from utils.general import check_dataset, check_file
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 try:
     import wandb

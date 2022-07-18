@@ -8,8 +8,10 @@ from copy import deepcopy
 import numpy as np
 import torch
 
-from utils.general import LOGGER, colorstr, emojis
+from utils.general import colorstr, emojis
 from utils.torch_utils import profile
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def check_train_batch_size(model, imgsz=640, amp=True):

@@ -10,7 +10,10 @@ import torch
 import yaml
 from tqdm import tqdm
 
-from utils.general import LOGGER, colorstr, emojis
+from utils.general import colorstr, emojis
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 PREFIX = colorstr('AutoAnchor: ')
 

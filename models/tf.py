@@ -32,7 +32,9 @@ from models.common import (C3, SPP, SPPF, Bottleneck, BottleneckCSP, C3x, Concat
 from models.experimental import MixConv2d, attempt_load
 from models.yolo import Detect
 from utils.activations import SiLU
-from utils.general import LOGGER, make_divisible, print_args
+from utils.general import make_divisible, print_args
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 class TFBN(keras.layers.Layer):

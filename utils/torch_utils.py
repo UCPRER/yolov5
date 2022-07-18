@@ -18,7 +18,9 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.general import LOGGER, file_date, git_describe
+from utils.general import file_date, git_describe
+import logging
+LOGGER = logging.getLogger(__name__)
 
 try:
     import thop  # for FLOPs computation
@@ -49,7 +51,7 @@ def device_count():
         return 0
 
 
-def select_device(device='', batch_size=0, newline=True):
+def select_device(device='', batch_size=0, newline=True, verbose=False):
     # device = None or 'cpu' or 0 or '0' or '0,1,2,3'
     s = f'YOLOv5 🚀 {git_describe() or file_date()} Python-{platform.python_version()} torch-{torch.__version__} '
     device = str(device).strip().lower().replace('cuda:', '').replace('none', '')  # to string, 'cuda:0' to '0'
@@ -81,7 +83,8 @@ def select_device(device='', batch_size=0, newline=True):
 
     if not newline:
         s = s.rstrip()
-    # LOGGER.info(s.encode().decode('ascii', 'ignore') if platform.system() == 'Windows' else s)  # emoji-safe
+    if verbose:
+        LOGGER.info(s.encode().decode('ascii', 'ignore') if platform.system() == 'Windows' else s)  # emoji-safe
     return torch.device(arg)
 
 

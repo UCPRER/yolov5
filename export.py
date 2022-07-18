@@ -67,9 +67,12 @@ if platform.system() != 'Windows':
 from models.experimental import attempt_load
 from models.yolo import Detect
 from utils.dataloaders import LoadImages
-from utils.general import (LOGGER, check_dataset, check_img_size, check_requirements, check_version, colorstr,
+from utils.general import (check_dataset, check_img_size, check_requirements, check_version, colorstr,
                            file_size, print_args, url2file)
 from utils.torch_utils import select_device
+
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def export_formats():

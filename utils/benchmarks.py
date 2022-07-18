@@ -41,8 +41,10 @@ if str(ROOT) not in sys.path:
 import export
 import val
 from utils import notebook_init
-from utils.general import LOGGER, check_yaml, print_args
+from utils.general import check_yaml, print_args
 from utils.torch_utils import select_device
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def run(

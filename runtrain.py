@@ -27,11 +27,8 @@ def get_args():
 
 
 def generate_coco_yaml(root, train_list, val_list, train_label, val_label, json_path, verbose=False):
-    if verbose:
+    with suppress_stdout(not verbose):
         coco = COCO(json_path)
-    else:
-        with suppress_stdout():
-            coco = COCO(json_path)
     catids = coco.getCatIds()
     cats = coco.loadCats(catids)
 
@@ -47,9 +44,8 @@ def generate_coco_yaml(root, train_list, val_list, train_label, val_label, json_
         yaml.safe_dump(data=obj, stream=f)
 
 
-def main():
+def main(args, unknown_args):
     logger = logging.getLogger(__name__)
-    args, unknown_args = get_args()
     if args.verbose:
         logger.info(f"args:{args}")
         logger.info(f"unknown_args:{unknown_args}")
@@ -106,8 +102,13 @@ def main():
 
 
 if __name__ == "__main__":
+    args, unknown_args = get_args()
+    if args.development:
+        fstr = "[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s"
+    else:
+        fstr = "[%(asctime)s][%(levelname)s] %(message)s"
     logging.basicConfig(
-        format="[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s",
+        format=fstr,
         level=logging.INFO,
     )
-    main()
+    main(args, unknown_args)

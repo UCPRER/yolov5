@@ -61,10 +61,11 @@ os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)  # OpenMP max threads (PyTorch 
 
 
 @contextmanager
-def suppress_stdout():
+def suppress_stdout(enable=True):
     with open(os.devnull, "w") as devnull:
         old_stdout = sys.stdout
-        sys.stdout = devnull
+        if enable:
+            sys.stdout = devnull
         try:
             yield
         finally:

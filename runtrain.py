@@ -5,6 +5,7 @@ import sys
 import json
 from pycocotools.coco import COCO
 import logging
+from utils.general import suppress_stdout
 
 
 def get_args():
@@ -19,16 +20,21 @@ def get_args():
     parser.add_argument("--config", default="", help="path of training config(Hyperparameters, JSON file)")
     parser.add_argument("--device", default="", help="cpu or cuda device, i.e. 0 or 0,1,2,3 or cpu")
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
+    parser.add_argument("--development", action="store_true", help="development mode")
 
     args, unknown_args = parser.parse_known_args()
     return args, unknown_args
 
 
-def generate_coco_yaml(root, train_list, val_list, train_label, val_label, json_path):
-    coco = COCO(json_path)
+def generate_coco_yaml(root, train_list, val_list, train_label, val_label, json_path, verbose=False):
+    if verbose:
+        coco = COCO(json_path)
+    else:
+        with suppress_stdout():
+            coco = COCO(json_path)
     catids = coco.getCatIds()
     cats = coco.loadCats(catids)
-    
+
     obj = {
         "train": str(train_list),
         "val": str(val_list),
@@ -65,11 +71,18 @@ def main():
         # 格式转换
         from converter import coco2yolo
 
-        coco2yolo(json_path=args.train_annotation, save_path=root / "labels/train")
-        coco2yolo(json_path=args.val_annotation, save_path=root / "labels/val")
+        if not args.development:
+            coco2yolo(json_path=args.train_annotation, save_path=root / "labels/train")
+            coco2yolo(json_path=args.val_annotation, save_path=root / "labels/val")
 
         generate_coco_yaml(
-            root, args.train_list, args.val_list, root / "labels/train", root / "labels/val", args.val_annotation
+            root,
+            args.train_list,
+            args.val_list,
+            root / "labels/train",
+            root / "labels/val",
+            args.val_annotation,
+            verbose=args.verbose,
         )
 
         # 导入超参数
@@ -88,13 +101,13 @@ def main():
             name="result",
             device=args.device,
             verbose=args.verbose,
-            **hyp
+            **hyp,
         )
 
 
 if __name__ == "__main__":
     logging.basicConfig(
-        format="%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s",
+        format="[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s",
         level=logging.INFO,
     )
     main()

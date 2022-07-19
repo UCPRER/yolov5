@@ -15,20 +15,17 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-PREFIX = colorstr('AutoAnchor: ')
-
-
 def check_anchor_order(m):
     # Check anchor order against stride order for YOLOv5 Detect() module m, and correct if necessary
     a = m.anchors.prod(-1).mean(-1).view(-1)  # mean anchor area per output layer
     da = a[-1] - a[0]  # delta a
     ds = m.stride[-1] - m.stride[0]  # delta s
     if da and (da.sign() != ds.sign()):  # same order
-        LOGGER.info(f'{PREFIX}Reversing anchor order')
+        LOGGER.info(f'Reversing anchor order')
         m.anchors[:] = m.anchors.flip(0)
 
 
-def check_anchors(dataset, model, thr=4.0, imgsz=640):
+def check_anchors(dataset, model, thr=4.0, imgsz=640, verbose=False):
     # Check anchor fit to data, recompute if necessary
     m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]  # Detect()
     shapes = imgsz * dataset.shapes / dataset.shapes.max(1, keepdims=True)
@@ -46,7 +43,7 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
     stride = m.stride.to(m.anchors.device).view(-1, 1, 1)  # model strides
     anchors = m.anchors.clone() * stride  # current anchors
     bpr, aat = metric(anchors.cpu().view(-1, 2))
-    s = f'\n{PREFIX}{aat:.2f} anchors/target, {bpr:.3f} Best Possible Recall (BPR). '
+    s = f'{aat:.2f} anchors/target, {bpr:.3f} Best Possible Recall (BPR). '
     if bpr > 0.98:  # threshold to recompute
         LOGGER.info(emojis(f'{s}Current anchors are a good fit to dataset ✅'))
     else:
@@ -55,17 +52,18 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
         try:
             anchors = kmean_anchors(dataset, n=na, img_size=imgsz, thr=thr, gen=1000, verbose=False)
         except Exception as e:
-            LOGGER.info(f'{PREFIX}ERROR: {e}')
+            LOGGER.info(f'ERROR: {e}')
         new_bpr = metric(anchors)[0]
         if new_bpr > bpr:  # replace anchors
             anchors = torch.tensor(anchors, device=m.anchors.device).type_as(m.anchors)
             m.anchors[:] = anchors.clone().view_as(m.anchors)
             check_anchor_order(m)  # must be in pixel-space (not grid-space)
             m.anchors /= stride
-            s = f'{PREFIX}Done ✅ (optional: update model *.yaml to use these anchors in the future)'
+            s = f'Done ✅ (optional: update model *.yaml to use these anchors in the future)'
         else:
-            s = f'{PREFIX}Done ⚠️ (original anchors better than new anchors, proceeding with original anchors)'
-        LOGGER.info(emojis(s))
+            s = f'Done ⚠️ (original anchors better than new anchors, proceeding with original anchors)'
+        if verbose:
+            LOGGER.info(emojis(s))
 
 
 def kmean_anchors(dataset='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen=1000, verbose=True):
@@ -104,8 +102,8 @@ def kmean_anchors(dataset='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen
         k = k[np.argsort(k.prod(1))]  # sort small to large
         x, best = metric(k, wh0)
         bpr, aat = (best > thr).float().mean(), (x > thr).float().mean() * n  # best possible recall, anch > thr
-        s = f'{PREFIX}thr={thr:.2f}: {bpr:.4f} best possible recall, {aat:.2f} anchors past thr\n' \
-            f'{PREFIX}n={n}, img_size={img_size}, metric_all={x.mean():.3f}/{best.mean():.3f}-mean/best, ' \
+        s = f'thr={thr:.2f}: {bpr:.4f} best possible recall, {aat:.2f} anchors past thr\n' \
+            f'n={n}, img_size={img_size}, metric_all={x.mean():.3f}/{best.mean():.3f}-mean/best, ' \
             f'past_thr={x[x > thr].mean():.3f}-mean: '
         for x in k:
             s += '%i,%i, ' % (round(x[0]), round(x[1]))
@@ -126,19 +124,19 @@ def kmean_anchors(dataset='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen
     # Filter
     i = (wh0 < 3.0).any(1).sum()
     if i:
-        LOGGER.info(f'{PREFIX}WARNING: Extremely small objects found: {i} of {len(wh0)} labels are < 3 pixels in size')
+        LOGGER.info(f'WARNING: Extremely small objects found: {i} of {len(wh0)} labels are < 3 pixels in size')
     wh = wh0[(wh0 >= 2.0).any(1)]  # filter > 2 pixels
     # wh = wh * (npr.rand(wh.shape[0], 1) * 0.9 + 0.1)  # multiply by random scale 0-1
 
     # Kmeans init
     try:
-        LOGGER.info(f'{PREFIX}Running kmeans for {n} anchors on {len(wh)} points...')
+        LOGGER.info(f'Running kmeans for {n} anchors on {len(wh)} points...')
         assert n <= len(wh)  # apply overdetermined constraint
         s = wh.std(0)  # sigmas for whitening
         k = kmeans(wh / s, n, iter=30)[0] * s  # points
         assert n == len(k)  # kmeans may return fewer points than requested if wh is insufficient or too similar
     except Exception:
-        LOGGER.warning(f'{PREFIX}WARNING: switching strategies from kmeans to random init')
+        LOGGER.warning(f'WARNING: switching strategies from kmeans to random init')
         k = np.sort(npr.rand(n * 2)).reshape(n, 2) * img_size  # random init
     wh, wh0 = (torch.tensor(x, dtype=torch.float32) for x in (wh, wh0))
     k = print_results(k, verbose=False)
@@ -166,7 +164,7 @@ def kmean_anchors(dataset='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen
         fg = anchor_fitness(kg)
         if fg > f:
             f, k = fg, kg.copy()
-            pbar.desc = f'{PREFIX}Evolving anchors with Genetic Algorithm: fitness = {f:.4f}'
+            pbar.desc = f'Evolving anchors with Genetic Algorithm: fitness = {f:.4f}'
             if verbose:
                 print_results(k, verbose)
 

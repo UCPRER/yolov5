@@ -85,6 +85,7 @@ def select_device(device='', batch_size=0, newline=True, verbose=False):
         s = s.rstrip()
     if verbose:
         LOGGER.info(s.encode().decode('ascii', 'ignore') if platform.system() == 'Windows' else s)  # emoji-safe
+        LOGGER.info(f'device number:{torch.cuda.device_count()}')
     return torch.device(arg)
 
 
